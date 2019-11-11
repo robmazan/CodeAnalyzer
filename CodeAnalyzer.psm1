@@ -154,17 +154,17 @@ An array of commit objects with the following fields:
 - [DateTime]date:  Commit date
 - [string]author:  Author's name
 - [string]subject: Commit message subject
-- [string]body:    Commit message body
 #>
 function Get-MergeCommits() {
     param (
         # Branch name to get merge commits from
         [string]$branch = "master"
     )
-    $prettyFormat="%H;%ci;%an;%s;%b"
-    $header=@('hash','date','author','subject','body')
+    $delim = "|"
+    $prettyFormat=[string]::Join($delim, @("%H","%ci", "%an", "%s"))
+    $header=@('hash','date','author','subject')
     $commits=git log --merges --first-parent "$branch" --pretty="format:$prettyFormat" --reverse
-    $commits | ConvertFrom-Csv -Delimiter ";" -Header $header | ForEach-Object {$_.date=[DateTime]::ParseExact($_.date, "yyyy-MM-dd HH:mm:ss zzz", $null); $_}
+    $commits | ConvertFrom-Csv -Delimiter $delim -Header $header | ForEach-Object {$_.date=[DateTime]::ParseExact($_.date, "yyyy-MM-dd HH:mm:ss zzz", $null); $_}
 }
 
 function Send-Merges {
