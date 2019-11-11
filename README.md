@@ -19,5 +19,6 @@ PS > Import-Module CodeAnalyzer
 - `Send-SonarReport`
 - `Send-ReportHistory`
 - `Get-ContributionMatrix`
+- `Get-FileStatsFromSonar`
 
 Use `Get-Help -Full <function name>` to get more information on these.

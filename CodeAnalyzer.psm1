@@ -266,6 +266,47 @@ function Get-ContributionMatrix() {
         $res | ConvertTo-Json | ConvertFrom-Json 
     }
 }
+<#
+.SYNOPSIS
+
+Get metrics from Sonar per file.
+#>
+Function Get-FileStatsFromSonar() {
+    param (
+        # Sonar server URL to get information from
+        [string]$server = "http://sonar.mshome.net:9000",
+        # Component on Sonar server (a.k.a project key)
+        [Parameter(Mandatory=$true)]
+        [string]$component,
+        # Regular expression for file names to include (for example: "\.(ts|js|s?css|html)$")
+        [string]$fileNameRegex=".*",
+        # Credential to use to authenticate to the Sonar server
+        [pscredential]$credential
+    )
+    $rowProto = @{
+        file = "";
+        bugs = 0;
+        code_smells = 0;
+        vulnerabilities = 0;
+    }
+    git ls-files | Where-Object {$_ -Match "$fileNameRegex"} | ForEach-Object {
+        $res=$rowProto.Clone()
+        $res.file=$_
+        $body=@{
+            ps=500;
+            component=[string]::Join(":", @($component, $_));
+            metricKeys="bugs,code_smells,vulnerabilities";
+            strategy="children";
+            s="qualifier,name"
+        }
+        try {
+            $sonarResult=Invoke-RestMethod -Method Get -Uri "$server/api/measures/component_tree" -Credential $credential -Body $body
+        } catch {
+        }
+        foreach ($measure in $sonarResult.baseComponent.measures) { $res[$measure.metric]=$measure.value }
+        $res | ConvertTo-Json | ConvertFrom-Json 
+    }
+}
 
 Export-ModuleMember -Function Use-FirstCommit
 Export-ModuleMember -Function Use-LastCommit
@@ -275,3 +316,4 @@ Export-ModuleMember -Function ConvertTo-SonarResults
 Export-ModuleMember -Function Send-SonarReport
 Export-ModuleMember -Function Send-ReportHistory
 Export-ModuleMember -Function Get-ContributionMatrix
+Export-ModuleMember -Function Get-FileStatsFromSonar
