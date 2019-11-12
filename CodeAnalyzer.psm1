@@ -301,9 +301,9 @@ Function Get-FileStatsFromSonar() {
         }
         try {
             $sonarResult=Invoke-RestMethod -Method Get -Uri "$server/api/measures/component_tree" -Credential $credential -Body $body
+            foreach ($measure in $sonarResult.baseComponent.measures) { $res[$measure.metric]=$measure.value }
         } catch {
         }
-        foreach ($measure in $sonarResult.baseComponent.measures) { $res[$measure.metric]=$measure.value }
         $res | ConvertTo-Json | ConvertFrom-Json 
     }
 }
